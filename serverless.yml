@@ -7,6 +7,15 @@ provider:
   runtime: nodejs12.x
   lambdaHashingVersion: 20201221
   profile: serverlessUser
+  environment:
+    tableName: ${self:custom.tableName}
+    bucketName: ${self:custom.bucketName}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+        - s3:*
+      Resource: "*"
 
 plugins:
   - serverless-s3-sync
@@ -17,16 +26,45 @@ package:
 
 custom:
   tableName: player-points
+  bucketName: myserverlessprojectuploadbucket-783
   s3Sync:
-    - bucketName: myserverlessprojectuploadbucket-783
+    - bucketName: ${self:custom.bucketName}
       localDir: UploadData
 
 functions:
   getUser:
-    handler: lamdas/getUser.handler
+    handler: lamdas/endpoints/getUser.handler
     events:
       - http:
           path: get-user/{ID}
+          method: GET
+          cors: true
+  getPlayerScore:
+    handler: lamdas/endpoints/getPlayerScore.handler
+    events:
+      - http:
+          path: get-player-score/{ID}
+          method: GET
+          cors: true
+  createPlayerScore:
+    handler: lamdas/endpoints/createPlayerScore.handler
+    events:
+      - http:
+          path: create-player-score/{ID}
+          method: POST
+          cors: true
+  createFile:
+    handler: lamdas/endpoints/createFile.handler
+    events:
+      - http:
+          path: create-file/{fileName}
+          method: POST
+          cors: true
+  getFile:
+    handler: lamdas/endpoints/getFile.handler
+    events:
+      - http:
+          path: get-file/{fileName}
           method: GET
           cors: true
 
@@ -35,7 +73,7 @@ resources:
     DemoBucketUpload:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: myserverlessprojectuploadbucket-783
+        BucketName: ${self:custom.bucketName}
     MyDynamoDbTable:
       Type: AWS::DynamoDB::Table
       Properties:
