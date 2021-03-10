@@ -1,0 +1,49 @@
+service: myserverlessproject
+
+frameworkVersion: "2"
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  profile: serverlessUser
+
+plugins:
+  - serverless-s3-sync
+  - serverless-webpack
+
+package:
+  individually: true
+
+custom:
+  tableName: player-points
+  s3Sync:
+    - bucketName: myserverlessprojectuploadbucket-783
+      localDir: UploadData
+
+functions:
+  getUser:
+    handler: lamdas/getUser.handler
+    events:
+      - http:
+          path: get-user/{ID}
+          method: GET
+          cors: true
+
+resources:
+  Resources:
+    DemoBucketUpload:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: myserverlessprojectuploadbucket-783
+    MyDynamoDbTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tableName}
+        AttributeDefinitions:
+          - AttributeName: ID
+            AttributeType: S
+        KeySchema:
+          - AttributeName: ID
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
